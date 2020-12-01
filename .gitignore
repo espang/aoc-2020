@@ -1,3 +1,6 @@
 fsharp/aoc/obj
 fsharp/aoc/.ionide
 *.txt
+
+.fake
+.ionide
