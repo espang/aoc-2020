@@ -28,9 +28,17 @@ let isValid (range, c, password) =
 
     Contains range cCount
 
-lines |> Seq.map parseLine |> Seq.filter isValid |> Seq.length
+lines
+|> Seq.map parseLine
+|> Seq.filter isValid
+|> Seq.length
 
-let isValid2 (range, c, password:string) =
+let isValid2 (range, c, password: string) =
     let c1 = password.[range.From]
     let c2 = password.[range.To]
     c = c1 && c <> c2 || c <> c1 && c = c2
+
+lines
+|> Seq.map parseLine
+|> Seq.filter isValid2
+|> Seq.length
