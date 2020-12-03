@@ -4,3 +4,6 @@ fsharp/aoc/.ionide
 
 .fake
 .ionide
+
+.calva
+.nrepl-port
