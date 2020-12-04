@@ -1,3 +1,4 @@
+
 (ns day2
   (:require
    [clojure.string :as str]))
@@ -12,16 +13,19 @@
   (-> (slurp "./aoc/input_2.txt")
       (str/split-lines)))
 
+(defn test-input [test-fn]
+  (->> input
+       (map parse-line)
+       (filter test-fn)
+       count))
+
 ;; part 1
 (defn test1 [[[n1 n2] c pw]]
   (let [occurences (get (frequencies pw) c 0)]
     (<= n1 occurences n2)))
 
-(println "part1: " 
-         (->> input
-              (map parse-line)
-              (filter test1)
-              count))
+(println "part1: "
+         (test-input test1))
 
 ;; part2
 (defn test2 [[[n1 n2] c pw]]
@@ -31,7 +35,4 @@
         (and (not= c c1) (= c c2)))))
 
 (println "part2: "
-         (->> input
-              (map parse-line)
-              (filter test2)
-              count))
+         (test-input test2))
