@@ -34,7 +34,7 @@ p1ValidPassports.Length
 
 let checkTextIsNumberBetween lower upper s =
     try
-        let number = int ""
+        let number = int s
         (number >= lower) && (number <= upper)
     with :? System.FormatException -> false
 
@@ -47,7 +47,7 @@ let checkHeight (x: string) =
 
 let checkColor (x: string) =
     (x.StartsWith "#")
-    && (Seq.forall System.Char.IsDigit x.[1..])
+    && (Seq.forall (fun x -> System.Char.IsDigit x || ('a' <= x && x <= 'f')) x.[1..])
 
 let checkEyeColor x =
     match x with
@@ -75,6 +75,7 @@ let passportValid2 (p: System.Collections.Generic.IDictionary<string, string>) =
                     | "eyr" -> checkTextIsNumberBetween 2020 2030 (p.Item h)
                     | "hgt" -> checkHeight (p.Item h)
                     | "hcl" -> checkColor (p.Item h)
+                    | "ecl" -> checkEyeColor (p.Item h)
                     | "pid" -> checkPassportId (p.Item h)
                     | _ -> false
             then _check t
