@@ -21,15 +21,14 @@ let seatIDfromString s =
 
 //part1
 File.ReadAllLines "input_5.txt"
-|> Seq.maxBy seatIDfromString
-|> seatIDfromString
+|> Seq.map seatIDfromString
+|> Seq.max
 
 //part2
-let seats =
-    File.ReadAllLines "input_5.txt"
-    |> Seq.map seatIDfromString
-
-seats
+File.ReadAllLines "input_5.txt"
+|> Seq.map seatIDfromString
 |> Seq.sort
 |> Seq.pairwise
 |> Seq.filter (fun (x, y) -> (y - x) = 2)
+|> Seq.map (fun (_, y) -> (y - 1))
+|> Seq.head
