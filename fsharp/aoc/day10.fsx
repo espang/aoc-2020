@@ -1,5 +1,5 @@
 open System.IO
-
+#time
 let numbers =
     File.ReadAllLines "input_10.txt"
     |> Seq.map int
@@ -19,6 +19,7 @@ let differences =
 // part 1
 (differences |> List.filter (fun x -> x = 1) |> List.length)
 * (differences |> List.filter (fun x -> x = 3) |> List.length)
+
 
 let numberCombinations (connectors:int list) =
     let mutable counter = Map.empty
@@ -56,4 +57,7 @@ let numberCombinations (connectors:int list) =
 // part2
 let countWaysDict =
     numberCombinations (List.sort allNumbers)
-countWaysDict.[builtInAdapdterJoltage]
+
+printfn "part: %A" countWaysDict.[builtInAdapdterJoltage]
+
+#time
