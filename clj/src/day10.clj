@@ -5,32 +5,29 @@
        (clojure.string/split-lines)
        (map read-string)))
 
-(defn jolts [jolts]
-  (->> jolts
+(def jolts
+  (->> input
        (cons 0)
-       (cons (+ 3 (apply max jolts)))
+       (cons (+ 3 (apply max input)))
        sort))
 
-((def freqs
-   (->> input
-        jolts
-        (partition 2 1)
-        (map #(- (second %) (first %)))
-        frequencies))
-;part 1
- (* (freqs 1) (freqs 3))
+(def freqs
+  (->>
+       jolts
+       (partition 2 1)
+       (map #(- (second %) (first %)))
+       frequencies))
+;; part 1
+(* (freqs 1) (freqs 3))
 
- (let [lookup  (into #{} (jolts input))
-       start   (apply max lookup)
-       counter (reduce (fn [acc itm]
+;; part 2
+(time
+ (let [counter (reduce (fn [acc itm]
                          (assoc acc
                                 itm
-                                (reduce + (map #(get acc % 0) ))))
+                                (+ (get acc (dec itm) 0)
+                                   (get acc (- itm 2) 0)
+                                   (get acc (- itm 3) 0))))
                        {0 1}
-                       (rest (sort lookup)))]))
-
-(range 0 -3)
-
-(-> input
-    jolts
-    combinations)
+                       (rest jolts))]
+   (println (counter (apply max jolts)))))
