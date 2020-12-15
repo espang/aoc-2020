@@ -1,24 +1,21 @@
 open System.Collections.Generic
 
-let nthNumberSpoken n (numbers:int list) =
+let nthNumberSpoken n (numbers: int list) =
     let lastIndex = Dictionary()
-    let add number time =
-        lastIndex.[number] <- time
 
     let rec speak step lastNbr =
-        if step > n
-        then lastNbr
+        if step > n then
+            lastNbr
+        else if lastIndex.ContainsKey lastNbr then
+            let next = step - 1 - lastIndex.[lastNbr]
+            lastIndex.[lastNbr] <- step - 1
+            speak (step + 1) next
         else
-            if lastIndex.ContainsKey lastNbr
-            then
-                let next = step - 1 - lastIndex.[lastNbr]
-                add lastNbr (step - 1)
-                speak (step + 1) next
-            else
-                add lastNbr (step - 1) 
-                speak (step + 1) 0
+            lastIndex.[lastNbr] <- step - 1
+            speak (step + 1) 0
+
     for index, number in List.indexed numbers do
-        add number (index + 1)
+        lastIndex.[number] <- index + 1
     speak (1 + numbers.Length) (List.last numbers)
 
 let input = [ 5; 2; 8; 16; 18; 0; 1 ]
