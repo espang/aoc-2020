@@ -47,7 +47,6 @@ let validNumber data number =
 
     any data
 
-
 let part1 data (tickets: int [] []) =
     let notValid number = not (validNumber data number)
 
