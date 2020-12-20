@@ -59,7 +59,7 @@ let tileTypeOf tile (counter: Map<int * int, int>) =
     | _ -> Inner
 
 // This function is used to place a tile into a puzzle. The puzzle is
-// solved from top right to bottom left. So a new tile is placed with
+// solved from top left to bottom right. So a new tile is placed with
 // optional left and top tiles. This function returns how the tile
 // needs to be flipped and rotated.
 let rotateTileToMatch top left tile (counter: Map<int * int, int>) =
@@ -67,6 +67,8 @@ let rotateTileToMatch top left tile (counter: Map<int * int, int>) =
     | Some tl ->
         match top with
         | Some tt ->
+            // Rotate the current tile so that it fits the top and left
+            // pieces.
             match tile.Edges with
             | [ le; top; _; _ ] when le = tl && top = tt -> D270, false
             | [ _; le; top; _ ] when le = tl && top = tt -> D180, false
@@ -78,8 +80,11 @@ let rotateTileToMatch top left tile (counter: Map<int * int, int>) =
             | [ _; _; top; le ] when le = tl && top = tt -> D0, true
             | _ -> failwith "hmm; shouldn't happen when tiles are selected correctly"
         | None ->
-            // top row
-            // left should match tl
+            // top row; Rotate and flip the current tile so that it matches
+            // the left piece. Handle corner and border pieces separatly.
+            // A count of 1 means this side is a border; 2 means this side
+            // has a counterpart. 1s have to be facing outside so that the puzzle
+            // can be solved.
             match tile.Edges |> List.map (fun t -> counter.[t]) with
             | [ 1; 1; 2; 2 ] -> if tile.Edges.[3] = tl then D0, false else D270, true
             | [ 1; 2; 2; 2 ] -> if tile.Edges.[3] = tl then D0, false else D180, true
@@ -93,7 +98,11 @@ let rotateTileToMatch top left tile (counter: Map<int * int, int>) =
     | None ->
         match top with
         | Some tt ->
-            // first col
+            // first column; Rotate and flip the current tile so that it matches
+            // the top piece. Handle corner and border pieces separatly.
+            // A count of 1 means this side is a border; 2 means this side
+            // has a counterpart. 1s have to be facing outside so that the puzzle
+            // can be solved.
             match tile.Edges |> List.map (fun t -> counter.[t]) with
             | [ 1; 1; 2; 2 ] -> if tile.Edges.[2] = tt then D180, false else D90, true
             | [ 2; 1; 2; 2 ] -> if tile.Edges.[2] = tt then D180, false else D180, true
@@ -105,7 +114,9 @@ let rotateTileToMatch top left tile (counter: Map<int * int, int>) =
             | [ 1; 2; 2; 2 ] -> if tile.Edges.[1] = tt then D270, false else D90, true
             | _ -> failwith "can't rotate given tile"
         | None ->
-            //top-left-corner
+            // top left corner. This is the first piece to set. Arrange the piece that
+            // the borders face left and top. This is done to support solving the puzzle
+            // from the top left to the bottom right.
             match tile.Edges |> List.map (fun t -> counter.[t]) with
             | [ 1; 1; _; _ ] -> D270, false
             | [ _; 1; 1; _ ] -> D180, false
@@ -207,7 +218,6 @@ let solvePuzzle n tiles =
     let seen = new HashSet<int>()
 
     let findTileWith edge =
-        printfn "find %A" edge
         tiles
         |> Seq.filter (fun t -> seen.Contains t.ID |> not)
         |> Seq.filter (fun t -> List.contains edge t.Edges)
@@ -217,12 +227,9 @@ let solvePuzzle n tiles =
         Array2D.init n n (fun _ _ -> 0, (D0, false))
 
     puzzle.[0, 0] <- startWith.ID, rotation
-    printfn "place tile %d at 0,0 with %A" startWith.ID rotation
     seen.Add startWith.ID |> ignore
 
     let rec solve row col =
-        printfn "handle (%d/%d)" row col
-
         let left =
             if col > 0 then
                 let tid, r = puzzle.[row, col - 1]
@@ -243,11 +250,9 @@ let solvePuzzle n tiles =
             | None ->
                 match top with
                 | Some t -> findTileWith t
-                | None -> failwith "never here!"
+                | None -> failwith "never here! This should only happen after 1 tile is placed. Therefore each following tile should be connected to the other puzzles!"
 
-        printfn "next is %A" next
         let rotation = rotateTileToMatch top left next c
-        printfn "place tile %d at %d,%d with %A" next.ID row col rotation
         puzzle.[row, col] <- next.ID, rotation
         seen.Add next.ID |> ignore
         if col = n - 1
@@ -286,9 +291,8 @@ let puzzleToText tiles (puzzle: (int * (Rotate * bool)) [,]) =
     let tileById =
         tiles |> Seq.map (fun t -> t.ID, t) |> Map.ofSeq
 
-    // replace each cell with a 8x8 char array
-    let board =
-        Array2D.init (n * 8) (n * 8) (fun _ _ -> ' ')
+    // Each tile is 8x8 chars. Create the board:
+    let board = Array2D.init (n * 8) (n * 8) (fun _ _ -> ' ')
 
     seq {
         for row in 0 .. n - 1 do
@@ -296,16 +300,17 @@ let puzzleToText tiles (puzzle: (int * (Rotate * bool)) [,]) =
     }
     |> Seq.iter (fun (r, c) ->
         let id, rotation = puzzle.[r, c]
-        let tile = tileById.[id]
-        let subBoard = rotate rotation (tile.Body |> array2D)
+        let subBoard = rotate rotation (tileById.[id].Body |> array2D)
         seq {
+            // the subboard is 10x10; but here only the inner 8x8 are used.
             for irow in 0 .. 7 do
                 for icol in 0 .. 7 -> irow, icol
         }
         |> Seq.iter (fun (ir, ic) ->
             let row = r * 8 + ir
             let col = c * 8 + ic
-            // increase the subBoard by 1 to ignore the border
+            // increase the subBoard's indexes by 1 to ignore the border
+            // this handles only the inner 8x8 of the total 10x10 chars
             board.[row, col] <- subBoard.[ir + 1, ic + 1]))
     board
 
